@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+//用来接收前端的请求分页参数
 @Data
 public class EmployeePageQueryDTO implements Serializable {
 
