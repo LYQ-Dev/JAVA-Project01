@@ -106,4 +106,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         return new PageResult(total, records);
     }
 
+    /**
+     * 启用禁用员工账号
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        employeeMapper.startOrStop(status,id);
+    }
+
 }

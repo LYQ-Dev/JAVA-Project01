@@ -13,4 +13,13 @@
         </where>
         order by create_time desc
     </select>
+<!--修改员工账号状态-->
+    <update id="startOrStop">
+        update employee
+        <set>
+            <if test="status != null">status = #{status},</if>
+            update_Time = now(),
+        </set>
+        where id = #{id}
+    </update>
 </mapper>
