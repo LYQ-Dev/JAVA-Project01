@@ -36,7 +36,7 @@ public class DishServiceImpl implements DishService {
         BeanUtils.copyProperties(dishDTO, dish);    //批量复制同名同类型的属性值，替代手动逐个 set 赋值；
 
         //向菜品表插入1条数据
-        dishMapper.insert(dish);//后绪步骤实现
+        dishMapper.insert(dish);
 
         //获取insert语句生成的主键值
         Long dishId = dish.getId();
