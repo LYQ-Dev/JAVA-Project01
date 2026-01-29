@@ -72,4 +72,9 @@ public interface DishMapper {
      */
     List<Dish> list(Dish dish);
 
+    /**
+     * 批量删除菜品
+     * @param id 菜品id数组
+     */
+    void startOrstop(Integer status, Long id);
 }

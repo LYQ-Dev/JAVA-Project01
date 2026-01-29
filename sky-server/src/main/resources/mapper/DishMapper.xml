@@ -62,4 +62,10 @@
         <!-- 按创建时间倒序，和分页查询保持一致 -->
         order by create_time desc
     </select>
+
+    <update id="startOrstop">
+        update dish
+        set status = #{status}
+        where id = #{id}
+    </update>
 </mapper>
