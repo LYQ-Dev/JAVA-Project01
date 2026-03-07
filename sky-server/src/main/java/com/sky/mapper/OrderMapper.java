@@ -36,5 +36,11 @@ public interface OrderMapper {
             "WHERE id = #{id}")
     void update(Orders order);
 
+    /**
+     * 根据id查询订单
+     * @param id
+     */
+    @Select("select * from orders where id=#{id}")
+    Orders getById(Long id);
 
 }

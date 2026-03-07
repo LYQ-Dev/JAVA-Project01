@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrdersSubmitDTO;
@@ -8,6 +9,7 @@ import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
 import com.sky.entity.ShoppingCart;
 import com.sky.exception.AddressBookBusinessException;
+import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.AddressBookMapper;
 import com.sky.mapper.OrderDetailMapper;
@@ -15,6 +17,7 @@ import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单
@@ -39,6 +44,8 @@ public class OrderServiceImpl implements OrderService {
     private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private AddressBookMapper addressBookMapper;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
 
     /**
@@ -105,5 +112,47 @@ public class OrderServiceImpl implements OrderService {
 
         return orderSubmitVO;
     }
+    /**
+     * 用户催单
+     *
+     * @param id
+     */
+    public void reminder(Long id) {
+        // 查询订单是否存在
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 2. 校验订单状态（可选：只有待接单/派送中状态才能催单，避免无效催单）
+        if (!isRemindable(orders.getStatus())) {
+            throw new OrderBusinessException("当前订单状态不支持催单");
+        }
+
+        // 3. 构建催单消息
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 2); // 2代表用户催单
+        map.put("orderId", id);
+        map.put("content", "订单号：" + orders.getNumber() + " 用户发起催单，请及时处理");
+
+        // 4. 通过注入的webSocketServer发送消息（核心修复点）
+        try {
+            webSocketServer.sendToAllClient(JSON.toJSONString(map));
+        } catch (Exception e) {
+            // 增加异常处理，避免催单失败导致接口报错
+            throw new OrderBusinessException("催单消息发送失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 校验订单是否可以催单
+     * @param status 订单状态
+     * @return 是否可催单
+     */
+    private boolean isRemindable(Integer status) {
+        // 示例：待接单(2)、派送中(4) 状态可催单，根据实际业务调整
+        return status == Orders.TO_BE_CONFIRMED || status == Orders.DELIVERY_IN_PROGRESS;
+    }
+
 
 }
