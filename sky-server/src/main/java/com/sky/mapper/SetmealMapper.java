@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface SetmealMapper {
@@ -44,4 +45,17 @@ public interface SetmealMapper {
             "from setmeal " +
             "where id = #{setmealId}")
     Setmeal getById(Long setmealId);
+
+    /**
+     * 根据套餐名称查询套餐
+     * @param setmealName
+     * @return
+     */
+    /**
+     * 根据条件统计套餐数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+
 }
