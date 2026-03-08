@@ -26,4 +26,22 @@
             </if>
         </where>
     </select>
+
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="begin != null">
+                <!-- 修复：将 >= 替换为 &gt;= -->
+                and order_time &gt;= #{begin}
+            </if>
+            <if test="end != null">
+                <!-- 修复：将 <= 替换为 &lt;= -->
+                and order_time &lt;= #{end}
+            </if>
+        </where>
+    </select>
+
 </mapper>
