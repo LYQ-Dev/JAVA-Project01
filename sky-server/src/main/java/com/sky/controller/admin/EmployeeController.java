@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.springframework.data.redis.core.StringRedisTemplate; // 必须引入
+import javax.servlet.http.HttpServletRequest; // 必须引入
 
 /**
  * 员工管理
@@ -30,6 +33,8 @@ public class EmployeeController {
     private EmployeeService employeeService;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 登录
@@ -67,7 +72,20 @@ public class EmployeeController {
      * @return
      */
     @PostMapping("/logout")
-    public Result<String> logout() {
+    public Result<String> logout(HttpServletRequest request) {
+
+        //这里来实现一下redis的token黑名单机制
+        // 1. 从请求头获取当前的 Token
+        String token = request.getHeader(jwtProperties.getAdminTokenName());
+
+        if (token != null) {
+            // 2. 将 Token 存入 Redis，Key 可以加个前缀方便管理
+            // 这里的过期时间建议设置为 JWT 的剩余有效时间，简单处理可以直接设为 jwtProperties 的 TTL
+            String key = "BLACK_LIST:" + token;
+            stringRedisTemplate.opsForValue().set(key, "1", jwtProperties.getAdminTtl(), TimeUnit.MILLISECONDS);
+            log.info("用户退出，Token 已加入黑名单：{}", token);
+        }
+
         return Result.success();
     }
 

@@ -13,6 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * jwt令牌校验的拦截器
@@ -23,6 +24,8 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 校验jwt
@@ -42,6 +45,14 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
 
         //1、从请求头中获取令牌
         String token = request.getHeader(jwtProperties.getUserTokenName());
+
+        // 1.2. 【新增】黑名单校验
+        String key = "BLACK_LIST:" + token;
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+            log.warn("检测到黑名单 Token 尝试访问：{}", token);
+            response.setStatus(401); // 这种情况下直接拒之门外
+            return false;
+        }
 
         //2、校验令牌
         try {
